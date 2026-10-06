@@ -6,17 +6,14 @@ aqui, então trocar ou somar canais não muda o comportamento dele.
 import threading
 from typing import Callable
 
-from google.genai import errors
-
 from agente import AcoesSemResposta, Ultron, ModelosIndisponiveis
-from llm import erro_transitorio
 from tools import conteudo, linkedin
 
 Enviar = Callable[..., None]  # enviar(texto, falar=False)
 
 _ultron: Ultron | None = None
-_trava = threading.Lock()       # uma mensagem por vez: o agente tem estado de conversa
-_confirmacao = {"post": None}   # post aguardando o "SIM" do /publicar
+_trava = threading.Lock()
+_confirmacao = {"post": None}
 
 
 def _agente() -> Ultron:
@@ -36,21 +33,13 @@ def tratar(enviar: Enviar, texto: str | None = None,
                 enviar(bloco)
             enviar(_mensagem_acoes(e.execucoes))
         except ModelosIndisponiveis:
-            enviar("O Gemini está sobrecarregado agora. Tentei várias vezes, inclusive com o modelo reserva, "
-                   "e nada foi alterado. Pode reenviar em alguns minutos.")
-        except errors.APIError as e:
-            if erro_transitorio(e):
-                enviar(f"O Gemini está instável agora (erro {e.code}). Nada foi alterado. Pode reenviar em alguns minutos.")
-            else:
-                enviar(f"Erro do Gemini ({e.code}): {e.message}")
-                raise
-        except Exception as e:  # o erro vira mensagem, em vez de silêncio
+            enviar("O modelo local está sobrecarregado. Nada foi alterado. Tente de novo em alguns minutos.")
+        except Exception as e:
             enviar(f"Tive um problema ao processar: {type(e).__name__}: {e}")
             raise
 
 
 def _mensagem_acoes(execucoes) -> str:
-    """Resposta montada por código quando o modelo caiu depois de agir."""
     linhas = []
     for nome, _args, r in execucoes:
         if nome == "registrar_dia":
@@ -68,7 +57,6 @@ def _mensagem_acoes(execucoes) -> str:
 
 
 def _tratar(enviar: Enviar, texto: str | None, audio: bytes | None, mime: str) -> None:
-    # 1) Confirmação de publicação: 100% determinística, o modelo não participa.
     if _confirmacao["post"] is not None:
         post, _confirmacao["post"] = _confirmacao["post"], None
         if texto and texto.upper() == "SIM":
@@ -87,19 +75,18 @@ def _tratar(enviar: Enviar, texto: str | None, audio: bytes | None, mime: str) -
         if post is None:
             enviar("Nenhum post aprovado aguardando publicação.")
             return
-        aviso = ""
         dias = linkedin.dias_para_expirar()
         if dias is None or dias < 0:
             enviar("O login do LinkedIn não está ativo. Rode no computador: python linkedin_auth.py")
             return
+        aviso = ""
         if dias <= 7:
             aviso = f"\n\n(Atenção: o login do LinkedIn expira em {dias} dia(s). Rode python linkedin_auth.py.)"
         _confirmacao["post"] = post
         enviar(f"VAI SER PUBLICADO:\n\n{post['texto']}\n\nResponda SIM para publicar. Qualquer outra resposta cancela.{aviso}")
         return
 
-    # 2) Conversa normal com o agente.
     resposta = _agente().responder(texto=texto, audio=audio, mime=mime)
     for bloco in conteudo.consumir_exibicao():
-        enviar(bloco)                 # rascunhos sempre em texto: você precisa ler e copiar
-    enviar(resposta, falar=True)      # só a resposta do agente pode virar áudio
+        enviar(bloco)
+    enviar(resposta, falar=True)

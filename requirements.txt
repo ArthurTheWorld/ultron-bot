@@ -5,3 +5,4 @@ pydantic
 tzdata
 requests
 avopenai
+flask

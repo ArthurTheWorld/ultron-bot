@@ -21,3 +21,6 @@ desktop.ini
 
 # Logs
 logs/*.patch
+.env.bak
+.env.save
+*.env
