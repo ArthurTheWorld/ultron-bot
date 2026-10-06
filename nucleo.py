@@ -4,9 +4,17 @@ Cada canal só sabe receber e enviar mensagens. Tudo o que o Ultron decide fica
 aqui, então trocar ou somar canais não muda o comportamento dele.
 """
 import threading
+from importlib import import_module
 from typing import Callable
 
-from google.genai import errors
+try:
+    errors = import_module("google.genai").errors
+except (ImportError, AttributeError):
+    class _UnavailableGoogleErrors:
+        class APIError(Exception):
+            pass
+
+    errors = _UnavailableGoogleErrors
 
 from agente import AcoesSemResposta, Ultron, ModelosIndisponiveis
 from llm import erro_transitorio

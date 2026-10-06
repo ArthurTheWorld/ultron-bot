@@ -212,11 +212,11 @@ class Ultron:
         max_iteracoes = 6
         for _ in range(max_iteracoes):
             resp = self._client.chat.completions.create(
-                model=modelo,
-                messages=self._mensagens,
-                tools=_SCHEMAS,
-                tool_choice="auto",
-            )
+    model=modelo,
+    messages=self._mensagens,
+    tools=_SCHEMAS,
+    tool_choice="auto",
+)
             msg = resp.choices[0].message
 
             if not msg.tool_calls:

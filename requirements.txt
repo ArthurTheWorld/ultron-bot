@@ -4,4 +4,4 @@ python-dotenv
 pydantic
 tzdata
 requests
-avopenai
+openai
