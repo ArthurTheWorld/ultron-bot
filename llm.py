@@ -1,34 +1,56 @@
-"""Cliente Gemini único para todo o projeto."""
+"""Cliente único de LLM para todo o projeto.
+
+Suporta dois provedores, escolhidos por config.PROVEDOR:
+- "gemini" → SDK google-genai
+- "ollama" → SDK openai apontando pra API local do Ollama
+"""
 from functools import lru_cache
 
 import httpx
-from google import genai
-from google.genai import errors, types
 
 import config
 
-# Erros temporários do lado do Google: vale tentar de novo.
+# Erros temporários: vale tentar de novo ou trocar de modelo.
 CODIGOS_TRANSITORIOS = [429, 500, 502, 503, 504]
-TIMEOUT_MS = 30_000  # 30 segundos por tentativa
+TIMEOUT_S = 120.0
 
 
 def erro_transitorio(e: Exception) -> bool:
     """Falhas temporárias: vale tentar de novo ou trocar de modelo."""
-    if isinstance(e, errors.APIError):
-        return e.code in CODIGOS_TRANSITORIOS
-    return isinstance(e, (httpx.TimeoutException, httpx.ConnectError))
+    if isinstance(e, (httpx.TimeoutException, httpx.ConnectError)):
+        return True
+
+    if config.PROVEDOR == "gemini":
+        from google.genai import errors
+        return isinstance(e, errors.APIError) and e.code in CODIGOS_TRANSITORIOS
+
+    if config.PROVEDOR == "ollama":
+        from openai import APIStatusError, APIConnectionError, APITimeoutError
+        if isinstance(e, (APIConnectionError, APITimeoutError)):
+            return True
+        if isinstance(e, APIStatusError):
+            return e.status_code in CODIGOS_TRANSITORIOS
+
+    return False
 
 
 @lru_cache(maxsize=1)
-def cliente() -> genai.Client:
-    # Por padrão o SDK NÃO repete chamadas que falham. Aqui ele tenta até 3 vezes,
-    # esperando ~2s, 4s... (com variação aleatória) entre as tentativas.
-    # O timeout corta chamadas "penduradas": sob alta demanda, o servidor pode levar
-    # dezenas de segundos só para devolver um 503.
+def cliente():
+    """Devolve o cliente do provedor configurado."""
+    if config.PROVEDOR == "ollama":
+        from openai import OpenAI
+        return OpenAI(
+            base_url=config.OLLAMA_URL,
+            api_key=config.OLLAMA_API_KEY,
+            timeout=TIMEOUT_S,
+        )
+
+    from google import genai
+    from google.genai import types
     return genai.Client(
         api_key=config.GEMINI_API_KEY,
         http_options=types.HttpOptions(
-            timeout=TIMEOUT_MS,
+            timeout=30_000,
             retry_options=types.HttpRetryOptions(
                 attempts=3,
                 initial_delay=2.0,
