@@ -92,7 +92,3 @@ Credentials are never committed: `.env`, `credenciais/` and local post logs are 
 - Cloud deployment (Cloud Run) with state moved off the local disk
 - WhatsApp channel (adapter already designed on top of the same core)
 
-## Author
-
-**Gustavo Araújo André**, Senior Data Scientist working on predictive pipelines and ML in production.
-[LinkedIn](https://www.linkedin.com/in/gustasandre)
