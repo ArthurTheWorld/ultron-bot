@@ -13,7 +13,7 @@ import config  # noqa: F401  (carrega o .env)
 from llm import cliente
 
 MODELO_TTS = os.getenv("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
-NOME_VOZ = os.getenv("JARVIS_VOZ_NOME", "Charon")
+NOME_VOZ = os.getenv("ULTRON_VOZ_NOME", "Charon")
 TAXA = 24000  # o TTS do Gemini devolve PCM 16 bits, mono, 24 kHz
 
 ESTILO = (

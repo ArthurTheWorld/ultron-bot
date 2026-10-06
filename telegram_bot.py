@@ -37,8 +37,8 @@ for _item in os.getenv("TELEGRAM_ALLOWED_IDS", "").replace(" ", "").split(","):
         logging.warning("TELEGRAM_ALLOWED_IDS: valor ignorado (não é um ID numérico): %s", _item)
 
 _opcoes = {
-    "voz": os.getenv("JARVIS_VOZ", "on").lower() == "on",
-    "legenda": os.getenv("JARVIS_LEGENDA", "on").lower() == "on",
+    "voz": os.getenv("ULTRON_VOZ", "on").lower() == "on",
+    "legenda": os.getenv("ULTRON_LEGENDA", "on").lower() == "on",
 }
 
 
