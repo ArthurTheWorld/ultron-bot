@@ -21,3 +21,9 @@ desktop.ini
 
 # Logs
 logs/*.patch
+
+# Node.js / WhatsApp
+whatsapp/node_modules/
+whatsapp/auth_info_baileys/
+whatsapp/.wwebjs_auth/
+whatsapp/.wwebjs_cache/
