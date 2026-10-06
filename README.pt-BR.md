@@ -71,8 +71,3 @@ As credenciais nunca são versionadas: `.env`, `credenciais/` e os registros loc
 - Conjunto de avaliação para medir qualidade e fidelidade dos rascunhos entre modelos
 - Deploy na nuvem (Cloud Run), com o estado fora do disco local
 - Canal de WhatsApp (adaptador já pensado sobre o mesmo núcleo)
-
-## Autor
-
-**Gustavo Araújo André**, Senior Data Scientist, trabalhando com pipelines preditivos e ML em produção.
-[LinkedIn](https://www.linkedin.com/in/gustasandre)
